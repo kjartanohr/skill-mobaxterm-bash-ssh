@@ -6,6 +6,9 @@ hvordan SSH, Bash eller autentisering fungerer.
 
 ## Installering
 
+Se [INSTALL.md](INSTALL.md) for full oppskrift, en kopierbar
+installasjonsprompt og kontroller før og etter installering.
+
 1. Pakk ut mappen `mobaxterm-bash-ssh` fra ZIP-filen.
 2. Legg hele mappen i `%USERPROFILE%\.copilot\skills\`. Resultatet skal være
    `%USERPROFILE%\.copilot\skills\mobaxterm-bash-ssh\SKILL.md`, ikke en ekstra
