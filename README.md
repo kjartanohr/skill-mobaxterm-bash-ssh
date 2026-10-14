@@ -30,6 +30,10 @@ installasjonsstien; du trenger ikke bruke forfatterens mapper.
 
 ## Eksempler på korte meldinger
 
+Se [PROMPT.md](PROMPT.md) for en detaljert, kopierbar statusprompt med
+verktøyvalg, avgrensning og stoppregler. Bytt ut sesjonsnavn og plattform
+med dine egne opplysninger før du bruker den.
+
 - "Bruk MobaXterm og sjekk diskplassen på serveren drift-linux."
 - "Koble til sesjonen lab-switch og vis modell og programvareversjon."
 - "Finn MobaXterm-installasjonen min, men ikke koble til noe."
