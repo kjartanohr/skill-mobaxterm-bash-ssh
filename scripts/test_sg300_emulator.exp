@@ -1,0 +1,78 @@
+#!/usr/bin/expect -f
+
+set timeout 15
+set port 22222
+set username "cisco"
+set password "sg300-test-only"
+
+set commandIndex 0
+if {$argc >= 3 && [lindex $argv 0] eq "--port"} {
+    set port [lindex $argv 1]
+    set commandIndex 2
+}
+if {$commandIndex >= $argc} {
+    puts stderr "Usage: expect tools/test_sg300_emulator.exp ?--port port? \{CLI command\} ..."
+    exit 64
+}
+
+if {![string is integer -strict $port] || $port < 1024 || $port > 65535} {
+    puts stderr "Port must be an integer from 1024 through 65535."
+    exit 64
+}
+set commands [lrange $argv $commandIndex end]
+foreach command $commands {
+    if {[string trim $command] eq "" || [regexp {[\r\n]} $command]} {
+        puts stderr "Commands must be non-empty and contain no line breaks."
+        exit 64
+    }
+}
+
+log_user 1
+match_max 8192
+spawn /bin/bash.exe -lic "ssh -p $port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o PubkeyAuthentication=no $username@127.0.0.1"
+
+expect {
+    -nocase -re {127\.0\.0\.1.*password:} {
+        send -- "$password\r"
+        exp_continue
+    }
+    -nocase -re {User Name:} {
+        send -- "$username\r"
+        exp_continue
+    }
+    -nocase -re {password:} {
+        send -- "$password\r"
+        exp_continue
+    }
+    -re {Do you want to change it now \(Y/N\)\[N\] \?} {
+        send -- "N\r"
+        exp_continue
+    }
+    -re {cisco-sgc300(\([^)\r\n]*\))?[>#] ?$} {
+        foreach command $commands {
+            send -- "$command\r"
+            expect {
+                -re {cisco-sgc300(\([^)\r\n]*\))?[>#] ?$} {}
+                timeout {
+                    puts stderr "\nTimed out waiting for emulator CLI prompt after command."
+                    exit 124
+                }
+                eof {
+                    puts stderr "\nSSH exited before the emulator CLI prompt returned."
+                    exit 12
+                }
+            }
+        }
+        send -- "exit\r"
+        expect eof
+        exit 0
+    }
+    timeout {
+        puts stderr "\nTimed out waiting for emulator CLI prompt."
+        exit 124
+    }
+    eof {
+        puts stderr "\nSSH exited before the emulator CLI prompt appeared."
+        exit 11
+    }
+}
