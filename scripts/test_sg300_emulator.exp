@@ -11,7 +11,7 @@ if {$argc >= 3 && [lindex $argv 0] eq "--port"} {
     set commandIndex 2
 }
 if {$commandIndex >= $argc} {
-    puts stderr "Usage: expect tools/test_sg300_emulator.exp ?--port port? \{CLI command\} ..."
+    puts stderr "Usage: expect test_sg300_emulator.exp ?--port port? \{CLI command\} ..."
     exit 64
 }
 
@@ -34,19 +34,19 @@ spawn /bin/bash.exe -lic "ssh -p $port -o StrictHostKeyChecking=no -o UserKnownH
 expect {
     -nocase -re {127\.0\.0\.1.*password:} {
         send -- "$password\r"
-        exp_continue
+        exp_continue -continue_timer
     }
     -nocase -re {User Name:} {
         send -- "$username\r"
-        exp_continue
+        exp_continue -continue_timer
     }
     -nocase -re {password:} {
         send -- "$password\r"
-        exp_continue
+        exp_continue -continue_timer
     }
     -re {Do you want to change it now \(Y/N\)\[N\] \?} {
         send -- "N\r"
-        exp_continue
+        exp_continue -continue_timer
     }
     -re {cisco-sgc300(\([^)\r\n]*\))?[>#] ?$} {
         foreach command $commands {
@@ -63,8 +63,33 @@ expect {
                 }
             }
         }
+        if {[regexp {\(config\)# ?$} $expect_out(0,string)]} {
+            send -- "end\r"
+            expect {
+                -re {cisco-sgc300# ?$} {}
+                timeout {
+                    puts stderr "\nTimed out leaving emulator configuration mode."
+                    exit 124
+                }
+                eof {
+                    puts stderr "\nSSH exited before leaving configuration mode."
+                    exit 12
+                }
+            }
+        }
         send -- "exit\r"
-        expect eof
+        expect {
+            eof {}
+            timeout {
+                puts stderr "\nTimed out closing emulator SSH session."
+                exit 124
+            }
+        }
+        set result [wait]
+        if {[lindex $result 2] != 0 || [lindex $result 3] != 0 || [llength $result] > 4} {
+            puts stderr "\nEmulator SSH process did not exit normally: $result"
+            exit 12
+        }
         exit 0
     }
     timeout {

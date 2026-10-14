@@ -8,6 +8,8 @@ hvordan SSH, Bash eller autentisering fungerer.
 
 Se [INSTALL.md](INSTALL.md) for full oppskrift, en kopierbar
 installasjonsprompt og kontroller før og etter installering.
+Guiden kartlegger manglende verktøy, krever godkjenning før installasjon og
+tester lokal SSH/Expect mot emulatoren med en tydelig OK/FAIL-rapport.
 
 1. Pakk ut mappen `mobaxterm-bash-ssh` fra ZIP-filen.
 2. Legg hele mappen i `%USERPROFILE%\.copilot\skills\`. Resultatet skal være

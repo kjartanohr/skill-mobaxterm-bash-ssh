@@ -96,6 +96,11 @@ or saved MobaXterm credential is involved. The scripts bind/connect only to
 Its generated host key changes each start; the test client's relaxed host-key
 checking is allowed only for this disposable loopback test.
 
+For full installation acceptance, [INSTALL.md](../INSTALL.md) requires these
+local tests and dependency checks. Missing dependencies must be reported and
+installed only with approval. The standalone examples below are not a
+substitute for that complete OK/FAIL checklist.
+
 Prerequisites: Windows Python 3.10+ with Paramiko **5.0.0**, MobaXterm Bash
 and its `expect` command (previously tested with Expect **5.45**).
 No dependency installation is needed for the normal SSH workflow.

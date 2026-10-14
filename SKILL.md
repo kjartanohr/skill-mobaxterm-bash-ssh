@@ -19,6 +19,15 @@ commands. The normal connection workflow needs no Python, extra SSH library,
 new key or helper installation. Terminal execution still follows the user's
 Copilot permissions. If tools are unavailable, say so; never pretend to connect.
 
+Check that every tool needed for the current operation actually runs before
+using it. If one is missing, report the failed prerequisite, explain the
+verified installation source/command and impact, and ask for permission to
+install or repair it. If permission is unavailable, provide manual steps and
+leave the check failed; do not silently substitute another SSH client.
+For complete installation verification, follow [INSTALL.md](INSTALL.md):
+it additionally requires the local emulator test dependencies and OK/FAIL
+reporting. Those dependencies are not needed for ordinary real-host SSH.
+
 The core invocation is:
 
 ```text

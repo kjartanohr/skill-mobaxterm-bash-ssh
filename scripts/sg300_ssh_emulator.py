@@ -194,18 +194,18 @@ def _command_output(command: str, mode: str, state: EmulatorState) -> tuple[str,
     return "% Unrecognized command\r\n", next_mode, close_session
 
 
-def _emulate_cli(channel: paramiko.Channel, state: EmulatorState) -> None:
+def _emulate_cli(channel: paramiko.Channel, state: EmulatorState) -> int:
     if state.secondary_login:
         _send(channel, "\r\nUser Name:")
         username = _read_line(channel)
         if username is None or not hmac.compare_digest(username, USERNAME):
             _send(channel, "\r\n% Authentication failed\r\n")
-            return
+            return 1
         _send(channel, "\r\nPassword:")
         password = _read_line(channel)
         if password is None or not hmac.compare_digest(password, PASSWORD):
             _send(channel, "\r\n% Authentication failed\r\n")
-            return
+            return 1
         _send(channel, "\r\n")
 
     if state.password_expiry:
@@ -213,7 +213,7 @@ def _emulate_cli(channel: paramiko.Channel, state: EmulatorState) -> None:
         answer = _read_line(channel)
         if answer is None or answer.strip().lower() not in {"n", "no"}:
             _send(channel, "\r\nPassword change is not implemented by this emulator.\r\n")
-            return
+            return 1
         with state.lock:
             state.password_aging_enabled = False
         _send(channel, "\r\n")
@@ -223,14 +223,15 @@ def _emulate_cli(channel: paramiko.Channel, state: EmulatorState) -> None:
     while not channel.closed:
         command = _read_line(channel, CLI_TIMEOUT)
         if command is None:
-            return
+            return 1
         _send(channel, command + "\r\n")
         output, mode, close_session = _command_output(command, mode, state)
         if output:
             _send(channel, output)
         if close_session:
-            return
+            return 0
         _send(channel, _prompt(mode))
+    return 1
 
 
 def _serve_connection(client: socket.socket, address: tuple[str, int], host_key: paramiko.RSAKey, state: EmulatorState) -> None:
@@ -245,7 +246,9 @@ def _serve_connection(client: socket.socket, address: tuple[str, int], host_key:
         channel = transport.accept(timeout=15)
         if channel is None or not server.shell_requested.wait(timeout=10):
             return
-        _emulate_cli(channel, state)
+        status = _emulate_cli(channel, state)
+        channel.send_exit_status(status)
+        channel.shutdown_write()
     except (OSError, paramiko.SSHException):
         logging.info("A local emulator connection ended.")
     finally:
